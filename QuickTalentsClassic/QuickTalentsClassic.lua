@@ -34,10 +34,10 @@ QTC:SetScript("OnEvent", function(self)
 	local settings = {
 		Scale = 100,
 		ShowTooltips = false,
-		BackgroundAlpha = 75,
+		BackgroundAlpha = 50,
 		ShowGlyphs = true,
 		GlyphHistorySize = 3,
-		Position = { "TOPRIGHT", -5, -210 },
+		Position = { "TOP" },
 		Bindings = {},
 		GlyphHistory = {},
 		Collapsed = false,
@@ -151,9 +151,11 @@ QTC:SetScript("OnEvent", function(self)
 
 	-- Remove Missing talent tooltip
 	function self:Rmt()
-		C_Timer.After(1, function()
+		C_Timer.After(0.2, function()
 			PlayerTalentFrame:Show()
-			PlayerTalentFrame:Hide()
+			C_Timer.After(0.1, function()
+				PlayerTalentFrame:Hide()
+			end)
 		end)
 	end
 
@@ -256,8 +258,8 @@ QTC:SetScript("OnEvent", function(self)
 
 				if i <= 18 then -- talents
 					local tier, column = GetTalentPosition(i)
-					local talentInfo = GetTalentInfo(tier, column)
-					btn.telantID = talentInfo.talentID
+					local talentInfo = GetTalentInfo(tier, column) or {}
+					btn.telantID = talentInfo.talentID or {}
 					btn:SetAttribute(
 						"macrotext",
 						"/stopmacro [combat]\n"
@@ -276,10 +278,9 @@ QTC:SetScript("OnEvent", function(self)
 					btn:RegisterForDrag("LeftButton")
 					btn:SetScript("OnDragStart", function()
 						if not InCombatLockdown() then
-							--PickupTalent(i) currently not working
+							--PickupTalent(btn.telantID)
 							local tier, column = GetTalentPosition(i)
 							local talentInfo = GetTalentInfo(tier, column)
-
 							PickupSpell(talentInfo.spellID)
 							if CursorHasSpell() then
 								QuickTalentsBinder.spell = select(4, GetCursorInfo())
