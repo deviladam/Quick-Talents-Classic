@@ -195,7 +195,6 @@ QuickTalents:SetScript("OnEvent",function(self)
 						"/click PlayerTalentFrameTalentsTalentRow"..ceil(i/3).."Talent"..((i-1)%3+1).."\n".. -- only way(?) to get the unlearn popup without taint
 						"/click StaticPopup1Button1\n".. -- confirm unlearn (TODO: what if popup1 is not the talent prompt)
 						"/click PlayerTalentFrameTalentsLearnButton\n"..
-						"asd1"
 						--"/run QuickTalents:Learn("..i..")\n" -- queue new talents for learn
 					);
 					btn:RegisterForDrag("LeftButton");
