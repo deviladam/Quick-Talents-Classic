@@ -127,7 +127,6 @@ QuickTalents:SetScript("OnEvent", function(self)
 		Queue[tier] = nil
 		for i = tier * 3 - 2, tier * 3 do
 			local talentInfo = GetTalentInfo(tier, column)
-
 			if talentInfo.selected then
 				Queue[tier] = t
 				return
