@@ -2,6 +2,7 @@
 -- QuickTalents
 ----------------------------------------------------------------------------------------------------------------------------------
 CreateFrame("Frame","QuickTalents",UIParent):RegisterEvent("ADDON_LOADED");
+local GetSpecialization = C_SpecializationInfo.GetActiveSpecGroup
 QuickTalents:SetScript("OnEvent",function(self)
 	self:UnregisterEvent("ADDON_LOADED");
 	
@@ -80,11 +81,20 @@ QuickTalents:SetScript("OnEvent",function(self)
 	-- Learn Queue
 	local Queue = {};
 	function self:Learn(t)
-		PlayerTalentFrame_ClearTalentSelections();
+		--PlayerTalentFrame_ClearTalentSelections();
 		local r = ceil(t/3);
+		local column = t % 3
+		if (column == 0 ) then column = 3 end
 		Queue[r] = nil;
 		for i = r*3-2, r*3 do
-			if select(5,GetTalentInfo(i)) then
+			local talentInfo = C_SpecializationInfo.GetTalentInfo({
+				tier = r,
+				column = column,
+				groupIndex = C_SpecializationInfo.GetActiveSpecGroup(false),
+				isInspect = false,
+			})
+
+			if talentInfo.selected then
 				Queue[r] = t;
 				return
 			end
@@ -106,13 +116,14 @@ QuickTalents:SetScript("OnEvent",function(self)
 	-- Glyphs
 	local GlyphHistory,PlayerSpec,PlayerGlyphs;
 	function self:UpdateGlyphs()
-		if PlayerSpec ~= GetSpecialization() then
-			PlayerSpec = GetSpecialization()
+		if PlayerSpec ~= GetSpecialization(false) then
+			PlayerSpec = GetSpecialization(false)
 			-- get players current glyphs
 			PlayerGlyphs = wipe(PlayerGlyphs or {});
 			for i = 1,3 do
 				local spell,icon,id = select(4,GetGlyphSocketInfo(i*2));
-				PlayerGlyphs[i] = id and { id, GetSpellInfo(spell):sub(10), icon } or {};
+				id = icon
+				PlayerGlyphs[i] = id and { id, GetSpellInfo(spell):sub(10), icon } or { };
 			end
 			-- load glyph history
 			local class = select(2,UnitClass("Player"));
@@ -126,6 +137,7 @@ QuickTalents:SetScript("OnEvent",function(self)
 		local h = GlyphHistory;
 		for i = 1,3 do
 			local spell,icon,id = select(4,GetGlyphSocketInfo(i*2));
+			id = icon
 			if PlayerGlyphs[i][1] ~= id then -- glyph slot has changed
 				if id then -- remove new glyph from history
 					local found = 0;
@@ -182,12 +194,26 @@ QuickTalents:SetScript("OnEvent",function(self)
 						"/click QuickTalentsOpener\n".. -- ensures the talent frame is ready for interaction
 						"/click PlayerTalentFrameTalentsTalentRow"..ceil(i/3).."Talent"..((i-1)%3+1).."\n".. -- only way(?) to get the unlearn popup without taint
 						"/click StaticPopup1Button1\n".. -- confirm unlearn (TODO: what if popup1 is not the talent prompt)
-						"/run QuickTalents:Learn("..i..")\n" -- queue new talents for learn
+						"/click PlayerTalentFrameTalentsLearnButton\n"..
+						"asd1"
+						--"/run QuickTalents:Learn("..i..")\n" -- queue new talents for learn
 					);
 					btn:RegisterForDrag("LeftButton");
 					btn:SetScript("OnDragStart",function()
 						if not InCombatLockdown() then
-							PickupTalent(i)
+							--PickupTalent(i)
+							local tier = ceil(i/3);
+							local column = i % 3
+							if (column == 0 ) then column = 3 end
+							local talentInfo = C_SpecializationInfo.GetTalentInfo({
+								tier = tier,
+								column = column,
+								groupIndex = C_SpecializationInfo.GetActiveSpecGroup(false),
+								isInspect = false,
+							})
+
+
+							PickupSpell(talentInfo.spellID)
 							if CursorHasSpell() then
 								QuickTalentsBinder.spell = select(4,GetCursorInfo());
 								QuickTalentsBinder:SetScript("OnUpdate",QuickTalentsBinder.OnEvent);
@@ -225,7 +251,7 @@ QuickTalents:SetScript("OnEvent",function(self)
 		
 		toggler:SetAttribute("OnCombat",cfg.CollapseInCombat)
 		
-		QuickTalentsBackground:SetTexture( 0,0,0, cfg.BackgroundAlpha/100 );
+		QuickTalentsBackground:SetColorTexture( 0,0,0, cfg.BackgroundAlpha/100 );
 		QuickTalentsReagents:SetText(select(2,GetTalentClearInfo()));
 		
 		self:SetScale(cfg.Scale/100);
@@ -243,9 +269,18 @@ QuickTalents:SetScript("OnEvent",function(self)
 				y = max(y,-select(5,btn:GetPoint())+28);
 				
 				if i <= 18 then -- talents
-					btn.selected = select(5,GetTalentInfo(i));
+					local tier = math.ceil(i / 3)
+					local column = i % 3
+					if (column == 0 ) then column = 3 end
+					local talentInfo = C_SpecializationInfo.GetTalentInfo({tier = tier,column = column,
+						groupIndex = C_SpecializationInfo.GetActiveSpecGroup(false),
+						isInspect = false,
+					})
+					if not talentInfo then return end
+
+					btn.selected = talentInfo.selected;
 					btn:SetAlpha(btn.selected and 1 or 0.25);
-					btn.texture:SetTexture((select(2,GetTalentInfo(i))));
+					btn.texture:SetTexture(talentInfo.icon);
 				else -- glyph buttons
 					local icon,id,name;
 					if i <= 21 then -- sockets
@@ -313,7 +348,7 @@ QuickTalents:SetScript("OnEvent",function(self)
 			
 			local background = window:CreateTexture();
 			background:SetAllPoints();
-			background:SetTexture(0,0,0,0.75);
+			background:SetColorTexture(0,0,0,0.75);
 			
 			local close = CreateFrame("BUTTON",nil,window);
 			close:SetPoint("TOPRIGHT",5,5);
@@ -326,7 +361,7 @@ QuickTalents:SetScript("OnEvent",function(self)
 			cross:SetText("X");
 			
 			for i,name in pairs({"ShowTooltips","ShowGlyphs","CollapseInCombat"}) do
-				local cb = CreateFrame("CheckButton", nil, window, "OptionsCheckButtonTemplate");
+				local cb = CreateFrame("CheckButton", nil, window, "UICheckButtonTemplate");
 				cb:SetPoint("TOPLEFT",10,10-(i*20));
 				--cb:SetHitRectInsets(0,-60,0,0);
 				cb:SetChecked(cfg[name]);
@@ -359,8 +394,12 @@ QuickTalents:SetScript("OnEvent",function(self)
 					cfg[name] = floor(val);
 					self:Update();
 				end)
-				select(11,slider:GetRegions()):Hide(); -- low
-				select(12,slider:GetRegions()):Hide(); -- high
+				if select(11,slider:GetRegions()) then 
+					select(11,slider:GetRegions()):Hide(); -- low
+				end
+				if select(12,slider:GetRegions()) then 
+					select(12,slider:GetRegions()):Hide(); -- high
+				end
 				y = y-26;
 			end
 		end
