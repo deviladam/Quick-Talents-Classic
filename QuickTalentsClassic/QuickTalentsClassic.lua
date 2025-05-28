@@ -3,6 +3,27 @@
 ----------------------------------------------------------------------------------------------------------------------------------
 CreateFrame("Frame", "QuickTalents", UIParent):RegisterEvent("ADDON_LOADED")
 local GetSpecialization = C_SpecializationInfo.GetActiveSpecGroup
+
+-- Helper function to get talent info
+local function GetTalentInfo(tier, column)
+	return C_SpecializationInfo.GetTalentInfo({
+		tier = tier,
+		column = column,
+		groupIndex = C_SpecializationInfo.GetActiveSpecGroup(false),
+		isInspect = false,
+	})
+end
+
+-- Helper function to convert talent number (1-18) to tier and column
+local function GetTalentPosition(talentNum)
+	local tier = ceil(talentNum / 3)
+	local column = talentNum % 3
+	if column == 0 then
+		column = 3
+	end
+	return tier, column
+end
+
 QuickTalents:SetScript("OnEvent", function(self)
 	self:UnregisterEvent("ADDON_LOADED")
 
@@ -102,22 +123,13 @@ QuickTalents:SetScript("OnEvent", function(self)
 	local Queue = {}
 	function self:Learn(t)
 		--PlayerTalentFrame_ClearTalentSelections();
-		local r = ceil(t / 3)
-		local column = t % 3
-		if column == 0 then
-			column = 3
-		end
-		Queue[r] = nil
-		for i = r * 3 - 2, r * 3 do
-			local talentInfo = C_SpecializationInfo.GetTalentInfo({
-				tier = r,
-				column = column,
-				groupIndex = C_SpecializationInfo.GetActiveSpecGroup(false),
-				isInspect = false,
-			})
+		local tier, column = GetTalentPosition(t)
+		Queue[tier] = nil
+		for i = tier * 3 - 2, tier * 3 do
+			local talentInfo = GetTalentInfo(tier, column)
 
 			if talentInfo.selected then
-				Queue[r] = t
+				Queue[tier] = t
 				return
 			end
 		end
@@ -234,18 +246,9 @@ QuickTalents:SetScript("OnEvent", function(self)
 					btn:RegisterForDrag("LeftButton")
 					btn:SetScript("OnDragStart", function()
 						if not InCombatLockdown() then
-							--PickupTalent(i)
-							local tier = ceil(i / 3)
-							local column = i % 3
-							if column == 0 then
-								column = 3
-							end
-							local talentInfo = C_SpecializationInfo.GetTalentInfo({
-								tier = tier,
-								column = column,
-								groupIndex = C_SpecializationInfo.GetActiveSpecGroup(false),
-								isInspect = false,
-							})
+							--PickupTalent(i) currently not working
+							local tier, column = GetTalentPosition(i)
+							local talentInfo = GetTalentInfo(tier, column)
 
 							PickupSpell(talentInfo.spellID)
 							if CursorHasSpell() then
@@ -312,17 +315,8 @@ QuickTalents:SetScript("OnEvent", function(self)
 				y = max(y, -select(5, btn:GetPoint()) + 28)
 
 				if i <= 18 then -- talents
-					local tier = math.ceil(i / 3)
-					local column = i % 3
-					if column == 0 then
-						column = 3
-					end
-					local talentInfo = C_SpecializationInfo.GetTalentInfo({
-						tier = tier,
-						column = column,
-						groupIndex = C_SpecializationInfo.GetActiveSpecGroup(false),
-						isInspect = false,
-					})
+					local tier, column = GetTalentPosition(i)
+					local talentInfo = GetTalentInfo(tier, column)
 					if not talentInfo then
 						return
 					end
