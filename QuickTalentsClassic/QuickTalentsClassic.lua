@@ -26,6 +26,9 @@ end
 
 QuickTalents:SetScript("OnEvent", function(self)
 	self:UnregisterEvent("ADDON_LOADED")
+	C_Timer.After(0.1, function()
+		C_AddOns.LoadAddOn("Blizzard_TalentUI")
+	end)
 
 	-- Load/Validate Settings
 	local settings = {
@@ -260,6 +263,7 @@ QuickTalents:SetScript("OnEvent", function(self)
 					btn:SetAttribute(
 						"macrotext",
 						format("/click GlyphFrameGlyph%d\n/click StaticPopup1Button1\n", (i - 18) * 2)
+							.. "/run PlayerTalentFrame:Hide()"
 					)
 					btn.ring = btn:CreateTexture(nil, "ARTWORK")
 					btn.ring:SetTexture("Interface/TalentFrame/talent-main")
@@ -333,13 +337,14 @@ QuickTalents:SetScript("OnEvent", function(self)
 						btn:SetAttribute(
 							"macrotext", -- TODO: It's possible to cast glyph spells directly, but requires placement into an action slot
 							"/stopmacro [combat]\n"
-								.. "/click QuickTalentsOpener\n"
+								.. "/run PlayerTalentFrame:Show()\n"
+								.. "/click PlayerTalentFrameTab3\n"
 								.. '/run SetGlyphNameFilter("'
 								.. name
 								.. '")\n' -- set name filter
-								.. "/run if IsGlyphFlagSet(1) then ToggleGlyphFilter(1) end\n" -- prep header
+								.. "/run if IsGlyphFlagSet(1)then ToggleGlyphFilter(1)end\n" -- prep header
 								.. "/click GlyphFrameHeader1\n" -- trigger scrollframe update
-								.. "/click GlyphFrameScrollFrameButton2\n" -- click glyph button, TODO: are there glyphs that return multiple results?
+								.. "/click GlyphFrameScrollFrameButton2" -- click glyph button, TODO: are there glyphs that return multiple results?
 						)
 						btn.texture:SetTexture(icon)
 					end
