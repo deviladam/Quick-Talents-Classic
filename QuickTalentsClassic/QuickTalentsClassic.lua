@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------------------------
--- QuickTalents
+-- QuickTalentsClassic
 ----------------------------------------------------------------------------------------------------------------------------------
-CreateFrame("Frame", "QuickTalents", UIParent):RegisterEvent("ADDON_LOADED")
+CreateFrame("Frame", "QTC", UIParent):RegisterEvent("ADDON_LOADED")
 local GetSpecialization = C_SpecializationInfo.GetActiveSpecGroup
 
 -- Helper function to get talent info
@@ -24,7 +24,7 @@ local function GetTalentPosition(talentNum)
 	return tier, column
 end
 
-QuickTalents:SetScript("OnEvent", function(self)
+QTC:SetScript("OnEvent", function(self)
 	self:UnregisterEvent("ADDON_LOADED")
 	C_Timer.After(0.1, function()
 		C_AddOns.LoadAddOn("Blizzard_TalentUI")
