@@ -142,13 +142,38 @@ QTC:SetScript("OnEvent", function(self)
 	CreateFrame("BUTTON", "QuickTalentsOpener", self, "SecureActionButtonTemplate"):SetAttribute("type", "macro")
 	QuickTalentsOpener:SetAttribute(
 		"macrotext",
-		"/click TalentMicroButton\n"
-			.. "/click [spec:1] PlayerSpecTab1\n"
-			.. "/click [spec:2] PlayerSpecTab2\n"
+		"/run PlayerTalentFrame:Show()\n"
+			.. "/click [spec:1]PlayerSpecTab1;[spec:2]PlayerSpecTab2\n"
 			.. "/click PlayerTalentFrameTab3\n"
 			.. "/click PlayerTalentFrameTab2\n"
-			.. "/click TalentMicroButton"
+			.. "/run PlayerTalentFrame:Hide()"
 	)
+
+	-- Remove Missing talent tooltip
+	function self:Rmt()
+		C_Timer.After(1, function()
+			PlayerTalentFrame:Show()
+			PlayerTalentFrame:Hide()
+		end)
+	end
+
+	-- PlayerTalentFrame:Show()
+	function self:S()
+		PlayerTalentFrame:Show()
+	end
+
+	-- PlayerTalentFrame:Hide()
+	function self:H()
+		PlayerTalentFrame:Hide()
+	end
+
+	-- Set up Glyph filter
+	function self:G(name)
+		SetGlyphNameFilter(name)
+		if IsGlyphFlagSet(1) then
+			ToggleGlyphFilter(1)
+		end
+	end
 
 	-- Glyphs
 	local GlyphHistory, PlayerSpec, PlayerGlyphs
@@ -232,18 +257,21 @@ QTC:SetScript("OnEvent", function(self)
 				end)
 
 				if i <= 18 then -- talents
+					local tier, column = GetTalentPosition(i)
 					btn:SetAttribute(
 						"macrotext",
 						"/stopmacro [combat]\n"
-							.. "/click QuickTalentsOpener\n" -- ensures the talent frame is ready for interaction
-							.. "/click PlayerTalentFrameTalentsTalentRow"
-							.. ceil(i / 3)
-							.. "Talent"
-							.. ((i - 1) % 3 + 1)
-							.. "\n" -- only way(?) to get the unlearn popup without taint
+							--.. "/click QuickTalentsOpener\n" -- ensures the talent frame is ready for interactionType
+							.. "/run QTC:S()\n"
+							.. "/click [spec:1]PlayerSpecTab1;[spec:2]PlayerSpecTab2\n"
+							.. "/click PlayerTalentFrameTab2\n"
+							.. format("/click PlayerTalentFrameTalentsTalentRow%dTalent%d\n", tier, column)
 							.. "/click StaticPopup1Button1\n" -- confirm unlearn (TODO: what if popup1 is not the talent prompt)
 							.. "/click PlayerTalentFrameTalentsLearnButton\n"
-						--"/run QuickTalents:Learn("..i..")\n" -- queue new talents for learn
+							.. "/run QTC:H()"
+						--.. "/run QTC:Rmt()\n"
+						--.. format("/run QTC:Learn(%d)\n", i) -- queue new talents for learn
+						--.. "\n12345678901234567890123456789012345678901234567890123456789012345678901234567890"
 					)
 					btn:RegisterForDrag("LeftButton")
 					btn:SetScript("OnDragStart", function()
@@ -262,8 +290,7 @@ QTC:SetScript("OnEvent", function(self)
 				elseif i <= 21 then -- glyphs slots
 					btn:SetAttribute(
 						"macrotext",
-						format("/click GlyphFrameGlyph%d\n/click StaticPopup1Button1\n", (i - 18) * 2)
-							.. "/run PlayerTalentFrame:Hide()"
+						format("/click GlyphFrameGlyph%d\n/click StaticPopup1Button1\n", (i - 18) * 2) .. "/run QTC:H()"
 					)
 					btn.ring = btn:CreateTexture(nil, "ARTWORK")
 					btn.ring:SetTexture("Interface/TalentFrame/talent-main")
@@ -337,12 +364,10 @@ QTC:SetScript("OnEvent", function(self)
 						btn:SetAttribute(
 							"macrotext", -- TODO: It's possible to cast glyph spells directly, but requires placement into an action slot
 							"/stopmacro [combat]\n"
-								.. "/run PlayerTalentFrame:Show()\n"
+								.. "/run QTC:S()\n"
+								.. "/click [spec:1]PlayerSpecTab1;[spec:2]PlayerSpecTab2\n"
 								.. "/click PlayerTalentFrameTab3\n"
-								.. '/run SetGlyphNameFilter("'
-								.. name
-								.. '")\n' -- set name filter
-								.. "/run if IsGlyphFlagSet(1)then ToggleGlyphFilter(1)end\n" -- prep header
+								.. format('/run QTC:G("%s")\n', name) -- set name filter and prep header
 								.. "/click GlyphFrameHeader1\n" -- trigger scrollframe update
 								.. "/click GlyphFrameScrollFrameButton2" -- click glyph button, TODO: are there glyphs that return multiple results?
 						)
