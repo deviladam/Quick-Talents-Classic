@@ -1,4 +1,0 @@
-## Interface: 50400
-## Title: Quick Talents
-## SavedVariables: QT_Saved
-QuickTalents.lua
