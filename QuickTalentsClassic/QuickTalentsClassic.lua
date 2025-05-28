@@ -183,9 +183,8 @@ QTC:SetScript("OnEvent", function(self)
 			-- get players current glyphs
 			PlayerGlyphs = wipe(PlayerGlyphs or {})
 			for i = 1, 3 do
-				local spell, icon, id = select(4, GetGlyphSocketInfo(i * 2))
-				id = icon
-				PlayerGlyphs[i] = id and { id, GetSpellInfo(spell):sub(10), icon } or {}
+				local id, icon = select(4, GetGlyphSocketInfo(i * 2))
+				PlayerGlyphs[i] = id and { id, GetSpellInfo(id):sub(10), icon } or {}
 			end
 			-- load glyph history
 			local class = select(2, UnitClass("Player"))
@@ -200,8 +199,7 @@ QTC:SetScript("OnEvent", function(self)
 		end
 		local h = GlyphHistory
 		for i = 1, 3 do
-			local spell, icon, id = select(4, GetGlyphSocketInfo(i * 2))
-			id = icon
+			local id, icon = select(4, GetGlyphSocketInfo(i * 2))
 			if PlayerGlyphs[i][1] ~= id then -- glyph slot has changed
 				if id then -- remove new glyph from history
 					local found = 0
@@ -217,7 +215,7 @@ QTC:SetScript("OnEvent", function(self)
 						h[j + 1] = h[j] or PlayerGlyphs[i]
 					end
 				end
-				PlayerGlyphs[i] = id and { id, GetSpellInfo(spell):sub(10), icon } or {} -- update PlayerGlyphs
+				PlayerGlyphs[i] = id and { id, GetSpellInfo(id):sub(10), icon } or {} -- update PlayerGlyphs
 			end
 		end
 	end
@@ -247,9 +245,9 @@ QTC:SetScript("OnEvent", function(self)
 					if cfg.ShowTooltips then
 						GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
 						if btn.glyphID then
-							GameTooltip:SetGlyphByID(btn.glyphID)
-						else
-							GameTooltip:SetTalent(btn:GetName():sub(19))
+							GameTooltip:SetSpellByID(btn.glyphID)
+						elseif btn.telantID then
+							GameTooltip:SetTalent(btn.telantID)
 						end
 						GameTooltip:Show()
 					end
@@ -258,6 +256,8 @@ QTC:SetScript("OnEvent", function(self)
 
 				if i <= 18 then -- talents
 					local tier, column = GetTalentPosition(i)
+					local talentInfo = GetTalentInfo(tier, column)
+					btn.telantID = talentInfo.talentID
 					btn:SetAttribute(
 						"macrotext",
 						"/stopmacro [combat]\n"
@@ -357,7 +357,7 @@ QTC:SetScript("OnEvent", function(self)
 				else -- glyph buttons
 					local icon, id, name
 					if i <= 21 then -- sockets
-						icon, id = select(5, GetGlyphSocketInfo((i - 18) * 2))
+						id, icon = select(4, GetGlyphSocketInfo((i - 18) * 2))
 						SetPortraitToTexture(btn.texture, icon or "Interface/Buttons/GreyscaleRamp64")
 					else -- history
 						id, name, icon = unpack(GlyphHistory[i - 21])
