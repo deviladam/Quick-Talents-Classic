@@ -161,6 +161,11 @@ QTC:SetScript("OnEvent", function(self)
 		PlayerTalentFrame:Hide()
 	end
 
+	-- PlayerTalentFrame_Close()
+	function C()
+		PlayerTalentFrame_Close()
+	end
+
 	-- PlayerTalentFrame_ClearTalentSelections()
 	function R()
 		PlayerTalentFrame_ClearTalentSelections()
@@ -361,7 +366,7 @@ QTC:SetScript("OnEvent", function(self)
 						btn:SetAttribute(
 							"macrotext", -- TODO: It's possible to cast glyph spells directly, but requires placement into an action slot
 							"/stopmacro [combat]\n"
-								.. "/run QTC:S()\n"
+								.. "/run C()S()\n"
 								.. "/click [spec:1]PlayerSpecTab1;[spec:2]PlayerSpecTab2\n"
 								.. "/click PlayerTalentFrameTab3\n"
 								.. format('/run QTC:G("%s")\n', name) -- set name filter and prep header
