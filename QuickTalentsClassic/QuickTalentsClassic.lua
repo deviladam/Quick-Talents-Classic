@@ -124,18 +124,20 @@ QTC:SetScript("OnEvent", function(self)
 
 	-- Learn Queue
 	local Queue = {}
-	function self:Learn(t)
-		--PlayerTalentFrame_ClearTalentSelections();
+
+	-- Learn talent (x = 1...18)
+	function L(t)
 		local tier, column = GetTalentPosition(t)
+		local talentInfo = GetTalentInfo(tier, column) or {}
 		Queue[tier] = nil
 		for i = tier * 3 - 2, tier * 3 do
-			local talentInfo = GetTalentInfo(tier, column)
+			local talentInfo = GetTalentInfo(tier, column) or {}
 			if talentInfo.selected then
 				Queue[tier] = t
 				return
 			end
 		end
-		LearnTalents(t)
+		LearnTalents(talentInfo.talentID)
 	end
 
 	-- Handles the safe loading & opening of the Blizzard Talent UI
@@ -150,13 +152,18 @@ QTC:SetScript("OnEvent", function(self)
 	)
 
 	-- PlayerTalentFrame:Show()
-	function self:S()
+	function S()
 		PlayerTalentFrame:Show()
 	end
 
 	-- PlayerTalentFrame:Hide()
-	function self:H()
+	function H()
 		PlayerTalentFrame:Hide()
+	end
+
+	-- PlayerTalentFrame_ClearTalentSelections()
+	function R()
+		PlayerTalentFrame_ClearTalentSelections()
 	end
 
 	-- Set up Glyph filter
@@ -254,16 +261,15 @@ QTC:SetScript("OnEvent", function(self)
 						"macrotext",
 						"/stopmacro [combat]\n"
 							--.. "/click QuickTalentsOpener\n" -- ensures the talent frame is ready for interactionType
-							.. "/run QTC:S()\n"
+							.. "/run C()S()R()\n"
 							.. "/click [spec:1]PlayerSpecTab1;[spec:2]PlayerSpecTab2\n"
 							.. "/click PlayerTalentFrameTab2\n"
 							.. format("/click PlayerTalentFrameTalentsTalentRow%dTalent%d\n", tier, column)
-							.. "/click StaticPopup1Button1\n" -- confirm unlearn (TODO: what if popup1 is not the talent prompt)
-							.. "/click PlayerTalentFrameTalentsLearnButton\n"
-							.. "/run QTC:H()"
-						--.. "/run QTC:Rmt()\n"
-						--.. format("/run QTC:Learn(%d)\n", i) -- queue new talents for learn
-						--.. "\n12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+							.. "/click StaticPopup1Button1\n" -- confirm unlearn (TODO: what if popup1 is not the talent prompt)							
+							.. "/click PlayerTalentFrameTalentsLearnButton\n"	
+							.. "/run H()\n"
+							.. format("/run L(%d)", i) -- queue new talents for learn
+							--.. "\n12345678901234567890123456789012345678901234567890123456789012345678901234567890"
 					)
 					btn:RegisterForDrag("LeftButton")
 					btn:SetScript("OnDragStart", function()
@@ -281,7 +287,7 @@ QTC:SetScript("OnEvent", function(self)
 				elseif i <= 21 then -- glyphs slots
 					btn:SetAttribute(
 						"macrotext",
-						format("/click GlyphFrameGlyph%d\n/click StaticPopup1Button1\n", (i - 18) * 2) .. "/run QTC:H()"
+						format("/click GlyphFrameGlyph%d\n/click StaticPopup1Button1\n", (i - 18) * 2) .. "/run H()"
 					)
 					btn.ring = btn:CreateTexture(nil, "ARTWORK")
 					btn.ring:SetTexture("Interface/TalentFrame/talent-main")
