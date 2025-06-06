@@ -122,6 +122,7 @@ QTC:SetScript("OnEvent", function(self)
 	toggler:SetAttribute("OnCombat", cfg.CollapseInCombat)
 	toggler:SetAttribute("_onstate-combat", [[self:RunAttribute("UpdateDisplay")]])
 
+	-- Obsoleted
 	-- Learn Queue
 	local Queue = {}
 
@@ -140,6 +141,7 @@ QTC:SetScript("OnEvent", function(self)
 		LearnTalents(talentInfo.talentID)
 	end
 
+	-- Obsoleted (seem not working clicking this button from macro)
 	-- Handles the safe loading & opening of the Blizzard Talent UI
 	CreateFrame("BUTTON", "QuickTalentsOpener", self, "SecureActionButtonTemplate"):SetAttribute("type", "macro")
 	QuickTalentsOpener:SetAttribute(
@@ -395,8 +397,9 @@ QTC:SetScript("OnEvent", function(self)
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
 	self:SetScript("OnEvent", function(self, e, ...)
+		-- Obsoleted
 		for i, t in pairs(Queue) do
-			self:Learn(t)
+			L(t)
 		end
 		if e:sub(1, 12) == "PLAYER_REGEN" then
 			local state = e == "PLAYER_REGEN_DISABLED"
