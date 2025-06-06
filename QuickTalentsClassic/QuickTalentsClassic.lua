@@ -149,16 +149,6 @@ QTC:SetScript("OnEvent", function(self)
 			.. "/run PlayerTalentFrame:Hide()"
 	)
 
-	-- Remove Missing talent tooltip
-	function self:Rmt()
-		C_Timer.After(0.2, function()
-			PlayerTalentFrame:Show()
-			C_Timer.After(0.1, function()
-				PlayerTalentFrame:Hide()
-			end)
-		end)
-	end
-
 	-- PlayerTalentFrame:Show()
 	function self:S()
 		PlayerTalentFrame:Show()
