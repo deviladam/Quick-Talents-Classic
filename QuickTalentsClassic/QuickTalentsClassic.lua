@@ -398,20 +398,22 @@ QTC:SetScript("OnEvent", function(self)
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
 	self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-	self:RegisterEvent("PVP_RATED_STATS_UPDATE")
+	self:RegisterEvent("CHAT_MSG_SYSTEM")
+	--self:RegisterEvent("PVP_RATED_STATS_UPDATE")
 	self:SetScript("OnEvent", function(self, e, ...)
 		-- Obsoleted
 		for i, t in pairs(Queue) do
 			L(t)
 		end
 
-		if e == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
+		if e == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then -- "The Arena battle has begun!"
 			print("CHAT_MSG_BG_SYSTEM_NEUTRAL", ...)
 		end
 
-		if e == "PVP_RATED_STATS_UPDATE" then
-			print("PVP_RATED_STATS_UPDATE", ...)
+		if e == "CHAT_MSG_SYSTEM" then -- "The battle has ended"
+			print("CHAT_MSG_SYSTEM", ...)
 		end
+		
 		if e:sub(1, 12) == "PLAYER_REGEN" then
 			local state = e == "PLAYER_REGEN_DISABLED"
 			for i, btn in pairs(buttons) do
