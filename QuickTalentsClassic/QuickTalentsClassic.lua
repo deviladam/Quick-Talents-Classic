@@ -42,6 +42,7 @@ QTC:SetScript("OnEvent", function(self)
 		GlyphHistory = {},
 		Collapsed = false,
 		CollapseInCombat = false,
+		KeepCollapsedInPVP = false,
 	}
 	QT_Saved = QT_Saved or settings
 	local cfg = QT_Saved
@@ -396,10 +397,20 @@ QTC:SetScript("OnEvent", function(self)
 	self:RegisterEvent("BAG_UPDATE_DELAYED")
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
+	self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+	self:RegisterEvent("PVP_RATED_STATS_UPDATE")
 	self:SetScript("OnEvent", function(self, e, ...)
 		-- Obsoleted
 		for i, t in pairs(Queue) do
 			L(t)
+		end
+
+		if e == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
+			print("CHAT_MSG_BG_SYSTEM_NEUTRAL", ...)
+		end
+
+		if e == "PVP_RATED_STATS_UPDATE" then
+			print("PVP_RATED_STATS_UPDATE", ...)
 		end
 		if e:sub(1, 12) == "PLAYER_REGEN" then
 			local state = e == "PLAYER_REGEN_DISABLED"
@@ -422,7 +433,7 @@ QTC:SetScript("OnEvent", function(self)
 			QuickTalentsConfig:SetShown(not QuickTalentsConfig:IsShown())
 		else
 			local window = CreateFrame("FRAME", "QuickTalentsConfig", UIParent)
-			window:SetSize(300, 160)
+			window:SetSize(300, 180)
 			window:SetPoint("CENTER")
 			window:EnableMouse(true)
 			window:SetMovable(true)
@@ -446,7 +457,7 @@ QTC:SetScript("OnEvent", function(self)
 			cross:SetPoint("CENTER")
 			cross:SetText("X")
 
-			for i, name in pairs({ "ShowTooltips", "ShowGlyphs", "CollapseInCombat" }) do
+			for i, name in pairs({ "ShowTooltips", "ShowGlyphs", "CollapseInCombat", "KeepCollapsedInPVP" }) do
 				local cb = CreateFrame("CheckButton", nil, window, "UICheckButtonTemplate")
 				cb:SetPoint("TOPLEFT", 10, 10 - (i * 20))
 				--cb:SetHitRectInsets(0,-60,0,0);
@@ -458,7 +469,7 @@ QTC:SetScript("OnEvent", function(self)
 				end)
 			end
 
-			local y = -80
+			local y = -100
 			for name, v in pairs({
 				Scale = { 20, 300 },
 				BackgroundAlpha = { 0, 100 },
