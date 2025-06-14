@@ -42,7 +42,7 @@ QTC:SetScript("OnEvent", function(self)
 		GlyphHistory = {},
 		Collapsed = false,
 		CollapseInCombat = false,
-		KeepCollapsedInPVP = false,
+		KeepCollapsedInActiveArena = false,
 	}
 	QT_Saved = QT_Saved or settings
 	local cfg = QT_Saved
@@ -273,11 +273,11 @@ QTC:SetScript("OnEvent", function(self)
 							.. "/click [spec:1]PlayerSpecTab1;[spec:2]PlayerSpecTab2\n"
 							.. "/click PlayerTalentFrameTab2\n"
 							.. format("/click PlayerTalentFrameTalentsTalentRow%dTalent%d\n", tier, column)
-							.. "/click StaticPopup1Button1\n" -- confirm unlearn (TODO: what if popup1 is not the talent prompt)							
-							.. "/click PlayerTalentFrameTalentsLearnButton\n"	
+							.. "/click StaticPopup1Button1\n" -- confirm unlearn (TODO: what if popup1 is not the talent prompt)
+							.. "/click PlayerTalentFrameTalentsLearnButton\n"
 							.. "/run H()\n"
 							.. format("/run L(%d)", i) -- queue new talents for learn
-							--.. "\n12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+						--.. "\n12345678901234567890123456789012345678901234567890123456789012345678901234567890"
 					)
 					btn:RegisterForDrag("LeftButton")
 					btn:SetScript("OnDragStart", function()
@@ -388,34 +388,45 @@ QTC:SetScript("OnEvent", function(self)
 				btn:Hide()
 			end
 		end
+		if cfg.KeepCollapsedInActiveArena then
+			self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+		else
+			self:UnregisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+		end
 		self:SetHeight(y)
 	end
 
-	-- Event Handler
 	self:RegisterEvent("PLAYER_TALENT_UPDATE")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD")
 	self:RegisterEvent("BAG_UPDATE_DELAYED")
 	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 	self:RegisterEvent("PLAYER_REGEN_DISABLED")
-	self:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-	self:RegisterEvent("CHAT_MSG_SYSTEM")
-	--self:RegisterEvent("PVP_RATED_STATS_UPDATE")
+	local inActiveArena = false
+
+	-- Event Handler
 	self:SetScript("OnEvent", function(self, e, ...)
 		-- Obsoleted
 		for i, t in pairs(Queue) do
 			L(t)
 		end
 
-		if e == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then -- "The Arena battle has begun!"
-			print("CHAT_MSG_BG_SYSTEM_NEUTRAL", ...)
+		if cfg.KeepCollapsedInActiveArena then
+			if e == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then -- "The Arena battle has begun!"
+				local msg = select(1, ...)
+
+				inActiveArena = msg == "The Arena battle has begun!"
+				--local isArena = IsActiveBattlefieldArena()
+				print("CHAT_MSG_BG_SYSTEM_NEUTRAL", select(1, ...), inActiveArena, msg)
+			end
+
+			if e == "PLAYER_ENTERING_WORLD" then
+				inActiveArena = false
+				print("PLAYER_ENTERING_WORLD")
+			end
 		end
 
-		if e == "CHAT_MSG_SYSTEM" then -- "The battle has ended"
-			print("CHAT_MSG_SYSTEM", ...)
-		end
-		
 		if e:sub(1, 12) == "PLAYER_REGEN" then
-			local state = e == "PLAYER_REGEN_DISABLED"
+			local state = e == "PLAYER_REGEN_DISABLED" and not inActiveArena
 			for i, btn in pairs(buttons) do
 				SetDesaturation(btn.texture, state)
 			end
@@ -459,7 +470,7 @@ QTC:SetScript("OnEvent", function(self)
 			cross:SetPoint("CENTER")
 			cross:SetText("X")
 
-			for i, name in pairs({ "ShowTooltips", "ShowGlyphs", "CollapseInCombat", "KeepCollapsedInPVP" }) do
+			for i, name in pairs({ "ShowTooltips", "ShowGlyphs", "CollapseInCombat", "KeepCollapsedInActiveArena" }) do
 				local cb = CreateFrame("CheckButton", nil, window, "UICheckButtonTemplate")
 				cb:SetPoint("TOPLEFT", 10, 10 - (i * 20))
 				--cb:SetHitRectInsets(0,-60,0,0);
