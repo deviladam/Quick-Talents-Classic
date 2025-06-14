@@ -102,10 +102,25 @@ QTC:SetScript("OnEvent", function(self)
 	]]
 	)
 	toggler:SetAttribute("Collapsed", cfg.Collapsed)
+
+	---@param isCollapsed boolean
+	local function SetTogglerDirections(isCollapsed)
+		if isCollapsed then
+			toggler.texture:SetTexCoord(0, 1, 0, 0.5)
+			toggler.texture2:SetTexCoord(0, 1, 0.5, 1)
+		else
+			toggler.texture:SetTexCoord(0, 1, 0.5, 1)
+			toggler.texture2:SetTexCoord(0, 1, 0, 0.5)
+		end
+	end
+
 	toggler:HookScript("OnClick", function()
-		cfg.Collapsed = toggler:GetAttribute("Collapsed")
+		cfg.Collapsed = not not toggler:GetAttribute("Collapsed")
+		SetTogglerDirections(cfg.Collapsed)
 	end)
-	toggler:SetSize(14, 14)
+
+	local togglerSize = 14
+	toggler:SetSize(togglerSize, togglerSize)
 	toggler:SetPoint("TOPRIGHT", -2, -2)
 	toggler:SetScript("OnEnter", function(self)
 		self:SetAlpha(1)
@@ -117,7 +132,16 @@ QTC:SetScript("OnEvent", function(self)
 	toggler.texture = toggler:CreateTexture()
 	toggler.texture:SetTexture("Interface/PaperDollInfoFrame/StatSortArrows")
 	toggler.texture:SetVertexColor(0, 1, 0, 1)
-	toggler.texture:SetAllPoints()
+	toggler.texture:SetPoint("TOPLEFT", 0, 0)
+	toggler.texture:SetSize(togglerSize, togglerSize / 2)
+
+	toggler.texture2 = toggler:CreateTexture()
+	toggler.texture2:SetTexture("Interface/PaperDollInfoFrame/StatSortArrows")
+	toggler.texture2:SetVertexColor(0, 1, 0, 1)
+	toggler.texture2:SetPoint("BOTTOMLEFT", 0, 0)
+	toggler.texture2:SetSize(togglerSize, togglerSize / 2)
+
+	SetTogglerDirections(cfg.Collapsed)
 
 	RegisterStateDriver(toggler, "combat", "[combat]1;2;")
 	toggler:SetAttribute("OnCombat", cfg.CollapseInCombat)
@@ -331,7 +355,7 @@ QTC:SetScript("OnEvent", function(self)
 		toggler:SetAttribute("OnCombat", cfg.CollapseInCombat)
 
 		QuickTalentsBackground:SetColorTexture(0, 0, 0, cfg.BackgroundAlpha / 100)
-		QuickTalentsReagents:SetText(select(2, GetTalentClearInfo()))
+		QuickTalentsReagents:SetText(select(2, GetTalentClearInfo()) or 0)
 
 		self:SetScale(cfg.Scale / 100)
 
