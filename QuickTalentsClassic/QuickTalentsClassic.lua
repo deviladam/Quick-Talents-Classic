@@ -30,6 +30,40 @@ QTC:SetScript("OnEvent", function(self)
 		C_AddOns.LoadAddOn("Blizzard_TalentUI")
 	end)
 
+	if string.find(string.lower(select(1, GetRealmName())), "beta") ~= nil then
+		DEFAULT_CHAT_FRAME:AddMessage(
+			"[QuickTalentsClassic] Help support the addon by sharing it in channel 1! Click the button above to advertise.",
+			1,
+			1,
+			0
+		)
+		DEFAULT_CHAT_FRAME:AddMessage("[QuickTalentsClassic] You can just hide it by rigth clicking", 1, 1, 0)
+
+		-- Create a button in the chat frame to send the advertisement message
+		if not QuickTalentsAdvertiseButton then
+			local btn =
+				CreateFrame("Button", "QuickTalentsAdvertiseButton", DEFAULT_CHAT_FRAME, "UIPanelButtonTemplate")
+			btn:SetSize(145, 22)
+			btn:SetText("Advertise QTS Classic")
+			btn:SetPoint("TOPRIGHT", DEFAULT_CHAT_FRAME, "TOPRIGHT", 5, 28)
+			btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+			btn:SetScript("OnMouseUp", function(self, button)
+				if button == "RightButton" then
+					self:Hide()
+				elseif button == "LeftButton" then
+					self:Hide()
+					SendChatMessage(
+						"Try Quick Talents Classic addon! Instantly swap talents with one click! =)",
+						"CHANNEL",
+						nil,
+						1
+					)
+				end
+			end)
+			btn:Show()
+		end
+	end
+
 	-- Load/Validate Settings
 	local settings = {
 		Scale = 100,
