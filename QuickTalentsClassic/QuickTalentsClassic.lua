@@ -30,38 +30,14 @@ QTC:SetScript("OnEvent", function(self)
 		C_AddOns.LoadAddOn("Blizzard_TalentUI")
 	end)
 
-	if string.find(string.lower(select(1, GetRealmName())), "beta") ~= nil then
+	local isBeta = string.find(string.lower(select(1, GetRealmName())), "beta") ~= nil
+	if isBeta then
 		DEFAULT_CHAT_FRAME:AddMessage(
-			"[QuickTalentsClassic] Help support the addon by sharing it in channel 1! Click the button above to advertise.",
+			"|cff00ff00[QuickTalentsClassic]|r Click |Hqtad:1|h|cff00ccff[ >>here<< ]|r|h to advertise the addon! <3",
 			1,
 			1,
 			0
 		)
-		DEFAULT_CHAT_FRAME:AddMessage("[QuickTalentsClassic] You can just hide it by rigth clicking", 1, 1, 0)
-
-		-- Create a button in the chat frame to send the advertisement message
-		if not QuickTalentsAdvertiseButton then
-			local btn =
-				CreateFrame("Button", "QuickTalentsAdvertiseButton", DEFAULT_CHAT_FRAME, "UIPanelButtonTemplate")
-			btn:SetSize(145, 22)
-			btn:SetText("Advertise QTS Classic")
-			btn:SetPoint("TOPRIGHT", DEFAULT_CHAT_FRAME, "TOPRIGHT", 5, 28)
-			btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-			btn:SetScript("OnMouseUp", function(self, button)
-				if button == "RightButton" then
-					self:Hide()
-				elseif button == "LeftButton" then
-					self:Hide()
-					SendChatMessage(
-						"Try Quick Talents Classic addon! Instantly swap talents with one click! =)",
-						"CHANNEL",
-						nil,
-						1
-					)
-				end
-			end)
-			btn:Show()
-		end
 	end
 
 	-- Load/Validate Settings
@@ -643,4 +619,40 @@ QTC:SetScript("OnEvent", function(self)
 	QuickTalentsBinder:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
 	QuickTalentsBinder:RegisterEvent("LEARNED_SPELL_IN_TAB")
 	QuickTalentsBinder:SetScript("OnEvent", QuickTalentsBinder.OnEvent)
+
+	if isBeta then
+		-- Only register once!
+		if not QuickTalentsClassic_SetItemRef_Hooked then
+			local orig_SetItemRef = SetItemRef
+
+			function SetItemRef(link, text, button, chatFrame)
+				if link:sub(1, 5) == "qtad:" then
+					-- You can show a popup, or do something else here
+					-- You CANNOT send a chat message directly from here (protected)
+					StaticPopup_Show("QT_ADVERTISE_CONFIRM")
+					return
+				end
+				orig_SetItemRef(link, text, button, chatFrame)
+			end
+			QuickTalentsClassic_SetItemRef_Hooked = true
+		end
+
+		-- Register a popup for confirmation
+		StaticPopupDialogs["QT_ADVERTISE_CONFIRM"] = {
+			text = "Do you want to advertise Quick Talents Classic in channel 1?",
+			button1 = "Yes",
+			button2 = "No",
+			OnAccept = function()
+				SendChatMessage(
+					"Try Quick Talents Classic addon! Instantly swap talents with one click! =)",
+					"CHANNEL",
+					nil,
+					1
+				)
+			end,
+			timeout = 0,
+			whileDead = true,
+			hideOnEscape = true,
+		}
+	end
 end)
